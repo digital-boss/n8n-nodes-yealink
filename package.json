@@ -1,0 +1,71 @@
+{
+    "name": "@digital-boss/n8n-nodes-yealink",
+    "version": "0.1.0",
+    "description": "A node consuming the Yealink API.",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "homepage": "https://n8n.io",
+    "author": {
+        "name": "Valentina Lilova",
+        "email": "valentina.lilova@digital-boss.de"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/digital-boss/n8n-nodes-yealink"
+    },
+    "main": "index.js",
+    "scripts": {
+        "dev": "npm run watch",
+        "build": "tsc && gulp",
+        "tslint": "tslint -p tsconfig.json -c tslint.json",
+        "watch": "tsc --watch",
+        "test": "jest"
+    },
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "credentials": [
+            "dist/credentials/YealinkApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/Yealink/Yealink.node.js"
+        ]
+    },
+    "devDependencies": {
+        "@types/crypto-js": "^4.1.1",
+        "@types/express": "^4.17.6",
+        "@types/jest": "^26.0.13",
+        "@types/node": "14.17.27",
+        "@types/request-promise-native": "~1.0.15",
+        "@types/uuid": "^8.3.2",
+        "gulp": "^4.0.0",
+        "jest": "^26.4.2",
+        "n8n-workflow": "~0.87.0",
+        "nodelinter": "^0.1.9",
+        "ts-jest": "^26.3.0",
+        "tslint": "^6.1.2",
+        "typescript": "~4.3.5"
+    },
+    "dependencies": {
+        "crypto-js": "^4.1.1",
+        "n8n-core": "~0.105.0",
+        "uuid": "^8.3.2"
+    },
+    "jest": {
+        "transform": {
+            "^.+\\.tsx?$": "ts-jest"
+        },
+        "testURL": "http://localhost/",
+        "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+        "testPathIgnorePatterns": [
+            "/dist/",
+            "/node_modules/"
+        ],
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js",
+            "json"
+        ]
+    }
+}
