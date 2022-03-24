@@ -19,18 +19,8 @@ export const deviceOperations: INodeProperties[] = [
 				description: 'Adding a batch of devices',
 			},
 			{
-				name: 'Check Device',
-				value: 'checkDevice',
-				description: 'Detecting whether or not the device is registered',
-			},
-			{
-				name: 'Check Mac',
-				value: 'checkMac',
-				description: 'Detecting whether or not the device exists',
-			},
-			{
-				name: 'Delete',
-				value: 'delete',
+				name: 'Batch Delete',
+				value: 'batchDelete',
 				description: 'Deleting a batch of devices',
 			},
 			{
@@ -39,17 +29,12 @@ export const deviceOperations: INodeProperties[] = [
 				description: 'Editing the device',
 			},
 			{
-				name: 'List',
-				value: 'list',
-				description: 'Viewing the device information by paging',
-			},
-			{
-				name: 'Migrate',
-				value: 'migrate',
-				description: 'Migrating a batch of devices',
+				name: 'Get Search List',
+				value: 'getSearchList',
+				description: 'Searching for Devices by Paging according to the MAC/Extension/Site',
 			},
 		],
-		default: 'list',
+		default: 'getSearchList',
 	},
 ];
 
@@ -58,13 +43,14 @@ export const deviceFields: INodeProperties[] = [
 	/*                                device:add                            	 */
 	/* ------------------------------------------------------------------------- */
 	{
-		displayName: 'Macs',
-		name: 'macs',
+		displayName: 'Mac',
+		name: 'mac',
 		required: true,
-		type: 'multiOptions',
-		typeOptions: {
-			loadOptionsMethod: 'getDeviceMacs',
-		},
+		type: 'string',
+		// type: 'multiOptions',
+		// typeOptions: {
+		// 	loadOptionsMethod: 'getDeviceMacs',
+		// },
 		displayOptions: {
 			show: {
 				resource: ['device'],
@@ -75,6 +61,38 @@ export const deviceFields: INodeProperties[] = [
 		description: 'The list of the MAC addresses',
 	},
 	{
+		displayName: 'Model ID',
+		name: 'modelId',
+		required: true,
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['add'],
+			},
+		},
+		default: '',
+		description: 'The model ID',
+	},
+	{
+		displayName: 'Region ID',
+		name: 'regionId',
+		required: true,
+		type: 'string',
+		// type: 'options',
+		// typeOptions: {
+		// 	loadOptionsMethod: 'getRegionIds', // todo
+		// },
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['add'],
+			},
+		},
+		default: '',
+		description: 'The site ID',
+	},
+	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
 		type: 'collection',
@@ -88,32 +106,18 @@ export const deviceFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Server ID',
-				name: 'serverId',
-				type: 'string',
-				default: '',
-				description: 'The server ID',
-			},
-			{
-				displayName: 'Unique Server Url',
-				name: 'uniqueServerUrl',
-				type: 'string',
-				default: '',
-				description: 'The URL of the autop server, and it is set for certain devices. After you set a URL for this parameter, the phone will go to the URL firstly when sending the RPS request. If you do notset a URL, the phone will go to the linked serverURL.',
-			},
-			{
-				displayName: 'Remark',
-				name: 'remark',
-				type: 'string',
-				default: '',
-				description: 'The remark',
-			},
-			{
 				displayName: 'Auth Name',
 				name: 'authName',
 				type: 'string',
 				default: '',
-				description: 'The authentication name',
+				description: 'The account for authentication',
+			},
+			{
+				displayName: 'Machine ID',
+				name: 'machineId',
+				type: 'string',
+				default: '',
+				description: 'The SN code',
 			},
 			{
 				displayName: 'Password',
@@ -122,70 +126,180 @@ export const deviceFields: INodeProperties[] = [
 				default: '',
 				description: 'The authentication password',
 			},
+			{
+				displayName: 'Phone',
+				name: 'phone',
+				type: 'string',
+				default: '',
+				description: 'The device name',
+			},
+			{
+				displayName: 'Remark',
+				name: 'remark',
+				type: 'string',
+				default: '',
+				description: 'The notes',
+			},
+			{
+				displayName: 'Server ID',
+				name: 'serverId',
+				type: 'string',
+				// type: 'options',
+				// typeOptions: {
+				// 	loadOptionsMethod: 'getServerIds', // todo
+				// },
+				default: '',
+				description: 'The server ID',
+			},
+			{
+				displayName: 'Staff IDs',
+				name: 'staffIds',
+				type: 'collection',
+				typeOptions: {
+					multipleValues: true,
+					multipleValueButtonText: 'Add Staff',
+				},
+				placeholder: 'Add Staff ID',
+				default: {},
+				description: 'The list of the account IDs that you cannot specify',
+				options: [
+					{
+						displayName: 'Staff ID',
+						name: 'staffId',
+						type: 'string',
+						// typeOptions: {
+						// 	loadOptionsMethod: 'getServerIds', // todo
+						// },
+						default: '',
+						description: 'The account ID that you cannot specify',
+					},
+				],
+			},
+			{
+				displayName: 'Staffs',
+				name: 'staffs',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				placeholder: 'Add Staff',
+				default: { metadataValues: [{lineId:'', staffId: ''}] },
+				description: 'The account information that you can specify',
+				options: [
+					{
+						name: 'metadataValues',
+						displayName: 'Metadata',
+						values: [
+							{
+								displayName: 'Line ID',
+								name: 'lineId',
+								type: 'number',
+								default: 0,
+								description: 'The line ID, which indicates the display order of the registered account on the phone screen',
+							},
+							{
+								displayName: 'Staff ID',
+								name: 'staffId',
+								type: 'string',
+								default: '',
+								description: 'The account ID',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Sync RPS',
+				name: 'syncRps',
+				type: 'boolean',
+				default: false,
+				description: 'Synchronize the device to the RPS device',
+			},
+			{
+				displayName: 'Unique Server URL',
+				name: 'uniqueServerUrl',
+				type: 'string',
+				default: '',
+				description: 'The unique server URL',
+			},
 		],
 	},
 
 	/*-------------------------------------------------------------------------- */
-	/*                                device:checkDevice                         */
+	/*                             device:batchDelete                            */
 	/* ------------------------------------------------------------------------- */
-	{
-		displayName: 'Mac',
-		name: 'mac',
-		required: true,
-		type: 'options',
-		typeOptions: {
-			loadOptionsMethod: 'getDeviceMacs',
-		},
-		displayOptions: {
-			show: {
-				resource: ['device'],
-				operation: ['checkDevice'],
-			},
-		},
-		default: '',
-		description: 'The MAC address',
-	},
 
-	/*-------------------------------------------------------------------------- */
-	/*                                device:checkMac                            */
-	/* ------------------------------------------------------------------------- */
 	{
-		displayName: 'Mac',
-		name: 'mac',
-		required: true,
-		type: 'options',
-		typeOptions: {
-			loadOptionsMethod: 'getDeviceMacs',
-		},
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
 		displayOptions: {
 			show: {
 				resource: ['device'],
-				operation: ['checkMac'],
+				operation: ['batchDelete'],
 			},
 		},
-		default: '',
-		description: 'The MAC address',
-	},
-
-	/*-------------------------------------------------------------------------- */
-	/*                                device:delete                            	 */
-	/* ------------------------------------------------------------------------- */
-	{
-		displayName: 'IDs',
-		name: 'ids',
-		required: true,
-		type: 'multiOptions',
-		typeOptions: {
-			loadOptionsMethod: 'getDeviceIds',
-		},
-		displayOptions: {
-			show: {
-				resource: ['device'],
-				operation: ['delete'],
+		options: [
+			// {
+			// 	displayName: 'Device IDs',
+			// 	name: 'deviceIds',
+			// 	type: 'multiOptions',
+			// 	typeOptions: {
+			// 		loadOptionsMethod: 'getDeviceIds',
+			// 	},
+			// 	default: {},
+			// 	description: 'The list of the device IDs',
+			// },
+			{
+				displayName: 'IDs',
+				name: 'ids',
+				required: true,
+				type: 'collection',
+				typeOptions: {
+					multipleValues: true,
+					// multipleValueButtonText: 'Add ID',
+				},
+				placeholder: 'Add ID',
+				default: {},
+				description: 'The list of the device IDs',
+				options: [
+					{
+						displayName: 'ID',
+						name: 'id',
+						type: 'string',
+						default: '',
+						description: 'The device ID',
+					},
+				],
 			},
-		},
-		default: '',
-		description: 'The list of the device IDs',
+			{
+				displayName: 'Sync RPS',
+				name: 'syncRps',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to synchronize the device to the RPS device. The default value is true.',
+			},
+			{
+				displayName: 'Macs',
+				name: 'macs',
+				type: 'string',
+				// type: 'multiOptions',
+				// typeOptions: {
+				// 	loadOptionsMethod: 'getDeviceMacs',
+				// },
+				default: '',
+				description: 'The list of the MAC addresses',
+			},
+			{
+				displayName: 'Delete RPS',
+				name: 'deleteRps',
+				type: 'boolean',
+				default: true,
+				description: 'Whether to delete RPS devices simultaneously or not. The default value is true.',
+			},
+		],
 	},
 
 	/*-------------------------------------------------------------------------- */
@@ -195,10 +309,11 @@ export const deviceFields: INodeProperties[] = [
 		displayName: 'ID',
 		name: 'id',
 		required: true,
-		type: 'options',
-		typeOptions: {
-			loadOptionsMethod: 'getDeviceIds',
-		},
+		type: 'string',
+		// type: 'options',
+		// typeOptions: {
+		// 	loadOptionsMethod: 'getDeviceIds',
+		// },
 		displayOptions: {
 			show: {
 				resource: ['device'],
@@ -209,6 +324,24 @@ export const deviceFields: INodeProperties[] = [
 		description: 'The device ID',
 	},
 	{
+		displayName: 'Region ID',
+		name: 'regionId',
+		required: true,
+		type: 'string',
+		// type: 'options',
+		// typeOptions: {
+		// 	loadOptionsMethod: 'getRegionIds', // todo
+		// },
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['edit'],
+			},
+		},
+		default: '',
+		description: 'The site ID',
+	},
+	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
 		type: 'collection',
@@ -222,49 +355,205 @@ export const deviceFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Server ID',
-				name: 'serverId',
-				type: 'options',
-				typeOptions: {
-					loadOptionsMethod: 'getServerIds',
-				},
-				default: '',
-				description: 'The server ID',
-			},
-			{
-				displayName: 'Unique Server URL',
-				name: 'uniqueServerUrl',
-				type: 'string',
-				default: '',
-				description: 'The URL of the autop server, set for certain devices, has a higher priority than the linked server URL.',
-			},
-			{
-				displayName: 'Remark',
-				name: 'remark',
-				type: 'string',
-				default: '',
-				description: 'The remark',
-			},
-			{
 				displayName: 'Auth Name',
 				name: 'authName',
 				type: 'string',
 				default: '',
-				description: 'The authentication name',
+				description: 'The account for authentication',
+			},
+			{
+				displayName: 'Machine ID',
+				name: 'machineId',
+				type: 'string',
+				default: '',
+				description: 'The SN code',
 			},
 			{
 				displayName: 'Password',
 				name: 'password',
 				type: 'string',
 				default: '',
-				description: 'The authentication password',
+				description: 'The password for authentication',
+			},
+			{
+				displayName: 'Phone',
+				name: 'phone',
+				type: 'string',
+				default: '',
+				description: 'The device name',
+			},
+			{
+				displayName: 'Remark',
+				name: 'remark',
+				type: 'string',
+				default: '',
+				description: 'The notes',
+			},
+			{
+				displayName: 'Server ID',
+				name: 'serverId',
+				type: 'string',
+				// type: 'options',
+				// typeOptions: {
+				// 	loadOptionsMethod: 'getServerIds', // todo
+				// },
+				default: '',
+				description: 'The server ID',
+			},
+			{
+				displayName: 'Staff IDs',
+				name: 'staffIds',
+				type: 'collection',
+				typeOptions: {
+					multipleValues: true,
+					multipleValueButtonText: 'Add Staff',
+				},
+				placeholder: 'Add Staff ID',
+				default: {},
+				description: 'The list of the account IDs that you cannot specify',
+				options: [
+					{
+						displayName: 'Staff ID',
+						name: 'staffId',
+						type: 'string',
+						// typeOptions: {
+						// 	loadOptionsMethod: 'getServerIds', // todo
+						// },
+						default: '',
+						description: 'The account ID that you cannot specify',
+					},
+				],
+			},
+			{
+				displayName: 'Staffs',
+				name: 'staffs',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				placeholder: 'Add Staff',
+				default: { metadataValues: [{lineId:'', staffId: ''}] },
+				description: 'The account information that you can specify',
+				options: [
+					{
+						name: 'metadataValues',
+						displayName: 'Metadata',
+						values: [
+							{
+								displayName: 'Line ID',
+								name: 'lineId',
+								type: 'number',
+								default: 0,
+								description: 'The line ID, which indicates the display order of the registered account on the phone screen',
+							},
+							{
+								displayName: 'Staff ID',
+								name: 'staffId',
+								type: 'string',
+								default: '',
+								description: 'The account ID',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Sync RPS',
+				name: 'syncRps',
+				type: 'boolean',
+				default: false,
+				description: 'Synchronize the device to the RPS device',
+			},
+			{
+				displayName: 'Unique Server URL',
+				name: 'uniqueServerUrl',
+				type: 'string',
+				default: '',
+				description: 'The unique server URL',
 			},
 		],
 	},
 
 	/*-------------------------------------------------------------------------- */
-	/*                                device:list                            	 */
+	/*                           device:getSearchList                        	 */
 	/* ------------------------------------------------------------------------- */
+	{
+		displayName: 'Mac',
+		name: 'mac',
+		required: true,
+		type: 'string',
+		// type: 'options',
+		// typeOptions: {
+		// 	loadOptionsMethod: 'getDeviceMacs', // todo
+		// },
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getSearchList'],
+			},
+		},
+		default: '',
+		description: 'The MAC address',
+	},
+	{
+		displayName: 'Username',
+		name: 'username',
+		required: true,
+		type: 'string',
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getSearchList'],
+			},
+		},
+		default: '',
+		description: 'The account information',
+	},
+	// {
+	// 	displayName: 'Region IDs',
+	// 	name: 'regionIds',
+	// 	required: true,
+	// 	type: 'multiOptions',
+	// 	typeOptions: {
+	// 		loadOptionsMethod: 'getRegionIds', // todo
+	// 	},
+	// 	displayOptions: {
+	// 		show: {
+	// 			resource: ['device'],
+	// 			operation: ['getSearchList'],
+	// 		},
+	// 	},
+	// 	default: {},
+	// 	description: 'The list of the site IDs',
+	// },
+	{
+		displayName: 'Region IDs',
+		name: 'regionIds',
+		required: true,
+		type: 'collection',
+		placeholder: 'Add Region ID',
+		typeOptions: {
+			multipleValues: true,
+			multipleValueButtonText: 'Add Region ID',
+		},
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getSearchList'],
+			},
+		},
+		default: {},
+		description: 'The list of the site IDs',
+		options: [
+			{
+				displayName: 'Region ID',
+				name: 'regionId',
+				type: 'string',
+				default: '',
+				description: 'The site ID',
+			},
+		],
+	},
 	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
@@ -274,38 +563,10 @@ export const deviceFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['device'],
-				operation: ['list'],
+				operation: ['getSearchList'],
 			},
 		},
 		options: [
-			{
-				displayName: 'Key',
-				name: 'key',
-				type: 'string',
-				default: '',
-				description: 'The key words',
-			},
-			{
-				displayName: 'Status',
-				name: 'status',
-				type: 'string',
-				default: '',
-				description: 'The status mark, one of bound or unbound',
-			},
-			{
-				displayName: 'Skip',
-				name: 'skip',
-				type: 'string',
-				default: '',
-				description: 'The skipped records, and it defaults to 0',
-			},
-			{
-				displayName: 'Limit',
-				name: 'limit',
-				type: 'number',
-				default: 0,
-				description: 'The maximum number of the obtained records per paging',
-			},
 			{
 				displayName: 'Auto Count',
 				name: 'autoCount',
@@ -313,45 +574,52 @@ export const deviceFields: INodeProperties[] = [
 				default: false,
 				description: 'Whether the total number is accounted automatically. It defaults to false.',
 			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 0,
+				description: 'The maximum number of the obtained records per paging. When you use regionIds to search for devices, this parameter(limit) is required to ensure the interface performance.',
+			},
+			{
+				displayName: 'Orderbys',
+				name: 'orderbys',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				placeholder: 'Add Staff',
+				default: { metadataValues: [{field:'', order: ''}] },
+				description: '',
+				options: [
+					{
+						name: 'metadataValues',
+						displayName: 'Metadata',
+						values: [
+							{
+								displayName: 'Field',
+								name: 'field',
+								type: 'string',
+								default: '',
+							},
+							{
+								displayName: 'Order',
+								name: 'order',
+								type: 'number',
+								default: '',
+								description: '',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Skip',
+				name: 'skip',
+				type: 'number',
+				default: '',
+				description: 'The number of skipped search results. This allows you to directly view the desired item by skipping some items. When you use regionIds to search for devices, this parameter(skip) is required to ensure the interface performance.',
+			},
 		],
 	},
-
-	/*-------------------------------------------------------------------------- */
-	/*                                device:migrate                             */
-	/* ------------------------------------------------------------------------- */
-	{
-		displayName: 'IDs',
-		name: 'ids',
-		required: true,
-		type: 'multiOptions',
-		typeOptions: {
-			loadOptionsMethod: 'getDeviceIds',
-		},
-		displayOptions: {
-			show: {
-				resource: ['device'],
-				operation: ['migrate'],
-			},
-		},
-		default: '',
-		description: 'The list of the device IDs',
-	},
-	{
-		displayName: 'Server ID',
-		name: 'serverId',
-		required: true,
-		type: 'options',
-		typeOptions: {
-			loadOptionsMethod: 'getServerIds',
-		},
-		displayOptions: {
-			show: {
-				resource: ['device'],
-				operation: ['migrate'],
-			},
-		},
-		default: '',
-		description: 'The server ID',
-	},
-
 ];

@@ -1,4 +1,4 @@
 export * from './Device';
-export * from './ManagerDevice';
+export * from './RpsDevice';
 export * from './Region';
 export * from './Staff';

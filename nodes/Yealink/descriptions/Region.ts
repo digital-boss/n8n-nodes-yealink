@@ -18,11 +18,11 @@ export const regionOperations: INodeProperties[] = [
 				value: 'add',
 			},
 			{
-				name: 'List',
-				value: 'list',
+				name: 'Get All',
+				value: 'getAll',
 			},
 		],
-		default: 'list',
+		default: 'getAll',
 	},
 ];
 
@@ -43,7 +43,7 @@ export const regionFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: '',
+		description: 'The ID of the parent site',
 	},
 	{
 		displayName: 'Name',
@@ -57,62 +57,35 @@ export const regionFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: '',
+		description: 'The site name',
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['region'],
+				operation: ['add'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Description',
+				name: 'description',
+				type: 'string',
+				default: '',
+				description: 'The site description',
+			},
+		],
 	},
 
 	/*-------------------------------------------------------------------------- */
-	/*                 				 region:list			        			 */
+	/*                 				 region:getAll			        			 */
 	/* ------------------------------------------------------------------------- */
 
-	// {
-	// 	displayName: 'Additional Fields',
-	// 	name: 'additionalFields',
-	// 	type: 'collection',
-	// 	placeholder: 'Add Field',
-	// 	default: {},
-	// 	displayOptions: {
-	// 		show: {
-	// 			resource: ['region'],
-	// 			operation: ['list'],
-	// 		},
-	// 	},
-	// 	options: [
-	// 		{
-	// 			displayName: 'Key',
-	// 			name: 'key',
-	// 			type: 'string',
-	// 			default: '',
-	// 			description: 'The key words',
-	// 		},
-	// 		{
-	// 			displayName: 'Status',
-	// 			name: 'status',
-	// 			type: 'string',
-	// 			default: '',
-	// 			description: 'The status mark, one of bound or unbound',
-	// 		},
-	// 		{
-	// 			displayName: 'Skip',
-	// 			name: 'skip',
-	// 			type: 'string',
-	// 			default: '',
-	// 			description: 'The skipped records, and it defaults to 0',
-	// 		},
-	// 		{
-	// 			displayName: 'Limit',
-	// 			name: 'limit',
-	// 			type: 'number',
-	// 			default: 0,
-	// 			description: 'The maximum number of the obtained records per paging',
-	// 		},
-	// 		{
-	// 			displayName: 'Auto Count',
-	// 			name: 'autoCount',
-	// 			type: 'boolean',
-	// 			default: false,
-	// 			description: 'Whether the total number is accounted automatically. It defaults to false.',
-	// 		},
-	// 	],
-	// },
+	// No params
 
 ];

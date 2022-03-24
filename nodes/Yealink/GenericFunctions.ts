@@ -17,9 +17,8 @@ import {
 
 import * as crypto from 'crypto';
 
-import * as CryptoJS from 'crypto-js';
-
 import { v4 as uuidv4 } from 'uuid';
+import CryptoJS = require('crypto-js');
 
 export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
 	method: string, endpoint: string, body: IDataObject = {}, qs: IDataObject = {}, uri?: string): Promise<any> { // tslint:disable-line:no-any
@@ -44,8 +43,7 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 		uri = uri || `${credentials.url}/${endpoint}`;
 
 		// Generate UUID
-		const guid = uuidv4()
-			.replace(/-/g,''); // remove the "-"
+		const guid = uuidv4();
 
 		// Get unix timestamp in ms
 		const timestamp = Date.now();
@@ -58,29 +56,29 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 			let sigString = method + '\n' +
 				'X-Ca-Key:' + key + '\n' +
 				'X-Ca-Nonce:' + guid + '\n' +
-				'X-Ca-Timestamp:' + timestamp + '\n' + '\n' +
+				'X-Ca-Timestamp:' + timestamp + '\n' +
 				endpoint;
 
 			// Add query string parameters to the sigString if they exist
 			if (Object.keys(qs).length !== 0) {
 				let formattedQFStr = '';
 				for (const [key, value] of Object.entries(qs)) {
-					formattedQFStr += `${key}=${value}`;
+					formattedQFStr += `${key}=${value}&`;
 				}
+				 formattedQFStr = formattedQFStr.substring(0, formattedQFStr.lastIndexOf('&')); // remove last "&"
+
 				sigString += '\n' + formattedQFStr;
 			}
 
 			// Create the signature
-			// const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
-			//  const sign = crypto.createHmac('sha256', secret).update(sigString, 'utf-8').digest('base64');
-			const sign = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256(sigString, secret));
+			const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
 
 			options= {
 				method,
 				headers: {
-					'X-Ca-Key': credentials.xCaKey,
-					'X-Ca-Timestamp': timestamp,
+					'X-Ca-Key': key,
 					'X-Ca-Nonce': guid,
+					'X-Ca-Timestamp': timestamp,
 					'X-Ca-Signature': sign,
 					'Content-Type': 'application/json',
 					'Charset': 'UTF-8',
@@ -95,30 +93,40 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 			}
 
 		} else {
-
+			// todo fix md5
 			// Generate Content MD5
-			const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body)).digest('base64');
+			// const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body)).digest('base64');
+			const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body), 'binary').digest('base64');
+			// const contentMd5 = crypto.createHash('md5').update(Buffer.from(JSON.stringify(body), 'utf8')).digest('base64');
+			// const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body, null, 'strToRm').replace(/strToRm/g, '').replace(/ /g, '')).digest('base64');
+
+			//console.log(
+			//     JSON.stringify(
+			//         {mac: "001565f460d4",  machineId: "8148017051507356",  modelId: "740b5620916a4d0a9a45171630076528",  phone: "YealinkDevice",  regionId: "e10d632b8c6d4624b92cd7af6eadbca9"},
+			//         null,
+			//         'strToRm')
+			//     .replace(/strToRm/g, '')
+			//     .replace(/ /g, '')
+			// )
 
 			// Generate string for signing
-			const sigString = method + '\n' +
+			const sigString =  method + '\n' +
 				'Content-MD5' + contentMd5 + '\n' +
 				'X-Ca-Key:' + key + '\n' +
 				'X-Ca-Nonce:' + guid + '\n' +
-				'X-Ca-Timestamp:' + timestamp + '\n' + '\n' +
+				'X-Ca-Timestamp:' + timestamp + '\n' +
 				endpoint;
 
 			// Create the signature
-			// const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
-			//  const sign = crypto.createHmac('sha256', secret).update(sigString, 'utf-8').digest('base64');
-			const sign = CryptoJS.enc.Base64.stringify(CryptoJS.HmacSHA256(sigString, secret));
+			const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
 
 			options= {
 				method,
 				headers: {
 					'Content-MD5': contentMd5,
-					'X-Ca-Key': credentials.xCaKey,
-					'X-Ca-Timestamp': timestamp,
+					'X-Ca-Key': key,
 					'X-Ca-Nonce': guid,
+					'X-Ca-Timestamp': timestamp,
 					'X-Ca-Signature': sign,
 					'Content-Type': 'application/json',
 					'Charset': 'UTF-8',

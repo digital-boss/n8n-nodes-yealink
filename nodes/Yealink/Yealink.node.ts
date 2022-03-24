@@ -18,10 +18,10 @@ import {
 import {
 	deviceFields,
 	deviceOperations,
-	managerDeviceFields,
-	managerDeviceOperations,
 	regionFields,
 	regionOperations,
+	rpsDeviceFields,
+	rpsDeviceOperations,
 	staffFields,
 	staffOperations
 } from './descriptions';
@@ -56,13 +56,14 @@ export class Yealink implements INodeType {
 			{
 				name: 'yealinkApi',
 				required: true,
-				testedBy: 'testYealinkApiAuth',
+				// testedBy: 'testYealinkApiAuth',
 			},
 		],
 		properties: [
 			{
 				displayName: 'Resource',
 				name: 'resource',
+				required: true,
 				type: 'options',
 				options: [
 					{
@@ -70,12 +71,12 @@ export class Yealink implements INodeType {
 						value: 'device',
 					},
 					{
-						name: 'Manager Device',
-						value: 'managerDevice',
-					},
-					{
 						name: 'Region',
 						value: 'region',
+					},
+					{
+						name: 'RPS Device',
+						value: 'rpsDevice',
 					},
 					{
 						name: 'Staff',
@@ -83,14 +84,13 @@ export class Yealink implements INodeType {
 					},
 				],
 				default: 'device',
-				required: true,
 			},
 			...deviceOperations,
 			...deviceFields,
-			...managerDeviceOperations,
-			...managerDeviceFields,
 			...regionOperations,
 			...regionFields,
+			...rpsDeviceOperations,
+			...rpsDeviceFields,
 			...staffOperations,
 			...staffFields,
 			{
@@ -104,168 +104,186 @@ export class Yealink implements INodeType {
 	};
 
 	// Endpoints:
-	//
-	// api/open/v1/manager/region/add
-	// 					list
-	// 	api/open/v1/manager/staff/addSip
-	// 					list
-	// api/open/v1/manager/staff/findPagedList
-	// api/open/v1/manager/staff/add
+	// api/open/v1/manager/device/add
+	// api/open/v1/manager/device/delete
 	// api/open/v1/manager/device/edit
-	// api/open/v1/device/add
-	// api/open/v1/device/list
-	// api/open/v1/device/checkDevice
-	// api/open/v1/device/checkMac
-	// api/open/v1/device/edit
-	// api/open/v1/device/migrate
-	// api/open/v1/device/delete
+	// api/open/v1/manager/device/getSearchList
+	// api/open/v1/manager/region/add
+	// api/open/v1/manager/region/getAll
+	// api/open/v1/manager/rpsDevice/checkDevice
+	// api/open/v1/manager/rpsDevice/checkMac
+	// api/open/v1/manager/staff/addSip
+	// api/open/v1/manager/staff/findPagedList
 
-	methods = {
-		loadOptions: {
-			// Get all the Device IDs to display them to user so that he can
-			// select them easily
-			async getDeviceIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const returnData: INodePropertyOptions[] = [];
-
-				const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/list');
-
-				for (const data of responseData.data) {
-					returnData.push({
-						name: data.id,
-						value: data.id,
-					});
-				}
-
-				returnData.sort((a, b) => {
-					if (a.name < b.name) { return -1; }
-					if (a.name > b.name) { return 1; }
-					return 0;
-				});
-
-				return returnData;
-			},
-
-			// Get all the Device MACs to display them to user so that he can
-			// select them easily
-			async getDeviceMacs(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const returnData: INodePropertyOptions[] = [];
-
-				const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/list');
-
-				for (const data of responseData.data) {
-					returnData.push({
-						name: data.mac,
-						value: data.mac,
-					});
-				}
-
-				returnData.sort((a, b) => {
-					if (a.name < b.name) { return -1; }
-					if (a.name > b.name) { return 1; }
-					return 0;
-				});
-
-				return returnData;
-			},
-
-			// Get all the Server IDs to display them to user so that he can
-			// select them easily
-			async getServerIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const returnData: INodePropertyOptions[] = [];
-
-				const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/server/list');
-
-				for (const data of responseData.data) {
-					returnData.push({
-						name: data.id,
-						value: data.id,
-					});
-				}
-
-				returnData.sort((a, b) => {
-					if (a.name < b.name) { return -1; }
-					if (a.name > b.name) { return 1; }
-					return 0;
-				});
-
-				return returnData;
-			},
-		},
-
-		credentialTest: {
-			async testYealinkApiAuth(this: ICredentialTestFunctions, credential: ICredentialsDecrypted): Promise<INodeCredentialTestResult> {
-
-				const endpoint = 'api/open/v1/device/list';
-				const method = 'POST';
-				const body: IDataObject = {
-					limit: 1,
-				};
-
-				// Get key/secret
-				const key = credential.data!.xCaKey as string;
-				const secret = credential.data!.secret as string;
-
-				// Set API URI variable
-				const uri = `${credential.data!.url}/${endpoint}`;
-
-				// Generate UUID
-				const guid = uuidv4()
-					.replace(/-/g,''); // remove the "-"
-
-				// Get unix timestamp in ms
-				const timestamp = Date.now();
-
-				// Generate Content MD5
-				const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body)).digest('base64');
-
-				// Generate string for signing
-				const sigString = method + '\n' +
-					'Content-MD5' + contentMd5 + '\n' +
-					'X-Ca-Key:' + key + '\n' +
-					'X-Ca-Nonce:' + guid + '\n' +
-					'X-Ca-Timestamp:' + timestamp + '\n' +
-					uri;
-				const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
-
-				const options: OptionsWithUri = {
-					method,
-					headers: {
-						'Content-MD5': contentMd5,
-						'X-Ca-Key': credential.data!.xCaKey,
-						'X-Ca-Timestamp': timestamp,
-						'X-Ca-Nonce': guid,
-						'X-Ca-Signature': sign,
-						'Content-Type': 'application/json',
-						'Charset': 'UTF-8',
-					},
-					body,
-					uri,
-					json: true,
-				};
-
-				try {
-					const response = await this.helpers.request(options);
-
-					if (response.status === false) {
-						return {
-							status: 'Error',
-							message: `${response.error}`,
-						};
-					}
-				} catch (err) {
-					return {
-						status: 'Error',
-						message: `${err.message}`,
-					};
-				}
-
-				return {
-					status: 'OK',
-					message: 'Connection successful!',
-				};
-			},
-		},
-	};
+	// methods = {
+	// 	loadOptions: {
+	// 		// // Get all the Device IDs to display them to user so that he can
+	// 		// // select them easily
+	// 		// async getDeviceIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	// 		// 	const returnData: INodePropertyOptions[] = [];
+	// 		//
+	// 		// 	const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/list');
+	// 		//
+	// 		// 	for (const data of responseData.data) {
+	// 		// 		returnData.push({
+	// 		// 			name: data.id,
+	// 		// 			value: data.id,
+	// 		// 		});
+	// 		// 	}
+	// 		//
+	// 		// 	returnData.sort((a, b) => {
+	// 		// 		if (a.name < b.name) { return -1; }
+	// 		// 		if (a.name > b.name) { return 1; }
+	// 		// 		return 0;
+	// 		// 	});
+	// 		//
+	// 		// 	return returnData;
+	// 		// },
+	//
+	// 		// // Get all the Device MACs to display them to user so that he can
+	// 		// // select them easily
+	// 		// async getDeviceMacs(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	// 		// 	const returnData: INodePropertyOptions[] = [];
+	// 		//
+	// 		// 	const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/rpsDevice/getPagedList');
+	// 		//
+	// 		// 	for (const data of responseData.data.data) {
+	// 		// 		returnData.push({
+	// 		// 			name: data.mac,
+	// 		// 			value: data.mac,
+	// 		// 		});
+	// 		// 	}
+	// 		//
+	// 		// 	returnData.sort((a, b) => {
+	// 		// 		if (a.name < b.name) { return -1; }
+	// 		// 		if (a.name > b.name) { return 1; }
+	// 		// 		return 0;
+	// 		// 	});
+	// 		//
+	// 		// 	return returnData;
+	// 		// },
+	//
+	// 		// // Get all the Server IDs to display them to user so that he can
+	// 		// // select them easily
+	// 		// async getServerIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	// 		// 	const returnData: INodePropertyOptions[] = [];
+	// 		//
+	// 		// 	const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/rpsServer/getPagedList');
+	// 		//
+	// 		// 	for (const data of responseData.data.data) {
+	// 		// 		returnData.push({
+	// 		// 			name: data.id,
+	// 		// 			value: data.id,
+	// 		// 		});
+	// 		// 	}
+	// 		//
+	// 		// 	returnData.sort((a, b) => {
+	// 		// 		if (a.name < b.name) { return -1; }
+	// 		// 		if (a.name > b.name) { return 1; }
+	// 		// 		return 0;
+	// 		// 	});
+	// 		//
+	// 		// 	return returnData;
+	// 		// },
+	//
+	// 	// 	// Get all the Region IDs to display them to user so that he can
+	// 	// 	// select them easily
+	// 	// 	async getRegionIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+	// 	// 		const returnData: INodePropertyOptions[] = [];
+	// 	//
+	// 	// 		const responseData = await yealinkApiRequest.call(this, 'GET', 'api/open/v1/manager/region/getAll');
+	// 	//
+	// 	// 		for (const data of responseData.data) {
+	// 	// 			returnData.push({
+	// 	// 				name: data.id,
+	// 	// 				value: data.id,
+	// 	// 			});
+	// 	// 		}
+	// 	//
+	// 	// 		returnData.sort((a, b) => {
+	// 	// 			if (a.name < b.name) { return -1; }
+	// 	// 			if (a.name > b.name) { return 1; }
+	// 	// 			return 0;
+	// 	// 		});
+	// 	//
+	// 	// 		return returnData;
+	// 	// 	},
+	// 	},
+	//
+	// 	credentialTest: {
+	// 		async testYealinkApiAuth(this: ICredentialTestFunctions, credential: ICredentialsDecrypted): Promise<INodeCredentialTestResult> {
+	//
+	// 			const endpoint = 'api/open/v1/manager/region/getAll';
+	// 			const method = 'GET';
+	// 			// const body: IDataObject = {
+	// 			// 	limit: 1,
+	// 			// };
+	//
+	// 			// Get key/secret
+	// 			const key = credential.data!.xCaKey as string;
+	// 			const secret = credential.data!.secret as string;
+	//
+	// 			// Set API URI variable
+	// 			const uri = `${credential.data!.url}/${endpoint}`;
+	//
+	// 			// Generate UUID
+	// 			const guid = uuidv4()
+	// 				.replace(/-/g,''); // remove the "-"
+	//
+	// 			// Get unix timestamp in ms
+	// 			const timestamp = Date.now();
+	//
+	// 			// // Generate Content MD5
+	// 			// const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body)).digest('base64');
+	//
+	// 			// Generate string for signing
+	// 			const sigString = method + '\n' +
+	// 				// 'Content-MD5' + contentMd5 + '\n' +
+	// 				'X-Ca-Key:' + key + '\n' +
+	// 				'X-Ca-Nonce:' + guid + '\n' +
+	// 				'X-Ca-Timestamp:' + timestamp + '\n' +
+	// 				uri;
+	// 			const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
+	//
+	// 			const options: OptionsWithUri = {
+	// 				method,
+	// 				headers: {
+	// 					// 'Content-MD5': contentMd5,
+	// 					'X-Ca-Key': credential.data!.xCaKey,
+	// 					'X-Ca-Timestamp': timestamp,
+	// 					'X-Ca-Nonce': guid,
+	// 					'X-Ca-Signature': sign,
+	// 					'Content-Type': 'application/json',
+	// 					'Charset': 'UTF-8',
+	// 				},
+	// 				// body,
+	// 				uri,
+	// 				json: true,
+	// 			};
+	//
+	// 			try {
+	// 				const response = await this.helpers.request(options);
+	//
+	// 				if (response.status === false) {
+	// 					return {
+	// 						status: 'Error',
+	// 						message: `${response.error}`,
+	// 					};
+	// 				}
+	// 			} catch (err) {
+	// 				return {
+	// 					status: 'Error',
+	// 					message: `${err.message}`,
+	// 				};
+	// 			}
+	//
+	// 			return {
+	// 				status: 'OK',
+	// 				message: 'Connection successful!',
+	// 			};
+	// 		},
+	// 	},
+	// };
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
@@ -274,127 +292,121 @@ export class Yealink implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 		const simplifyOutput = this.getNodeParameter('simplifyOutput', 0) as boolean;
-		let body: IDataObject = {};
+		const body: IDataObject = {};
 		const qs: IDataObject = {};
 
 		for (let i = 0; i < items.length; i++) {
 			try {
 				if (resource === 'device') {
 					if (operation === 'add') {
-						body.masc = this.getNodeParameter('macs', i) as string[];
+						body.mac = this.getNodeParameter('mac', i) as string;
+						body.modelId = this.getNodeParameter('modelId', i) as string;
+						body.regionId = this.getNodeParameter('regionId', i) as string;
 						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
+						if(additionalFields.staffIds !== undefined) {
+							body.staffIds = (additionalFields.staffIds as IDataObject[]).map(a => a.staffId);
+							delete additionalFields.staffIds;
+						}
+						if(additionalFields.staffs !== undefined && (additionalFields.staffs as IDataObject).metadataValues !== undefined) {
+						 	body.staffs = (additionalFields.staffs as IDataObject).metadataValues;
+						 	delete additionalFields.staffs;
+						 }
 						Object.assign(body, additionalFields);
 
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/add', body);
+						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/add', body);
 
-					} else if (operation === 'checkDevice') {
-						qs.mac = this.getNodeParameter('mac', i) as string;
+					} else if (operation === 'batchDelete') {
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						if(additionalFields.ids !== undefined) {
+							body.ids = (additionalFields.ids as IDataObject[]).map(a => a.id);
+							delete additionalFields.ids;
+						}
+						Object.assign(body, additionalFields);
 
-						responseData = await yealinkApiRequest.call(this, 'GET', 'api/open/v1/device/checkDevice', undefined, qs);
-
-					} else if (operation === 'checkMac') {
-						qs.mac = this.getNodeParameter('mac', i) as string;
-
-						responseData = await yealinkApiRequest.call(this, 'GET', 'api/open/v1/device/checkMac', undefined, qs);
-
-					} else if (operation === 'delete') {
-						qs.ids = this.getNodeParameter('ids', i) as string;
-
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/delete', undefined, qs);
+						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/batchDelete', body);
 
 					} else if (operation === 'edit') {
-						body.ids = this.getNodeParameter('id', i) as string;
-						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
-						Object.assign(body, additionalFields);
-
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/edit', body);
-
-					} else if (operation === 'list') {
-						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
-						Object.assign(body, additionalFields);
-
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/device/list', body);
-
-					} else if (operation === 'migrate') {
-						body.ids = this.getNodeParameter('ids', i) as string[];
-						body.serverId = this.getNodeParameter('serverId', i) as string;
-						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
-						Object.assign(body, additionalFields);
-
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/migrate', body);
-
-					}
-
-				} else if (resource === 'managerDevice') {
-					if (operation === 'edit') {
 						body.id = this.getNodeParameter('id', i) as string;
 						body.regionId = this.getNodeParameter('regionId', i) as string;
-						const staffs = (this.getNodeParameter('staffs', i) as IDataObject).metadataValues as IDataObject;
-						if (staffs.lineId !== undefined) {
-							body.lineId = staffs.lineId;
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						if(additionalFields.staffIds !== undefined) {
+							body.staffIds = (additionalFields.staffIds as IDataObject[]).map(a => a.staffId);
+							delete additionalFields.staffIds;
 						}
-						if (body.staffId !== undefined) {
-							body.staffId = staffs.staffId;
-						}
+						if(additionalFields.staffs !== undefined && (additionalFields.staffs as IDataObject).metadataValues !== undefined) {
+						 	body.staffs = (additionalFields.staffs as IDataObject).metadataValues;
+						 	delete additionalFields.staffs;
+						 }
+						Object.assign(body, additionalFields);
 
 						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/edit', body);
 
+					} else if (operation === 'getSearchList') {
+						body.mac = this.getNodeParameter('mac', i) as string;
+						body.username = this.getNodeParameter('username', i) as string;
+						const regionIds = this.getNodeParameter('regionIds', i) as IDataObject[];
+						body.regionIds = regionIds.map(a => a.regionId);
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						if(additionalFields.orderbys !== undefined && (additionalFields.orderbys as IDataObject).metadataValues !== undefined) {
+						 	body.orderbys = (additionalFields.orderbys as IDataObject).metadataValues;
+						 	delete additionalFields.orderbys;
+						 }
+						Object.assign(body, additionalFields);
+
+						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/getSearchList', body);
+
 					}
+
 				} else if (resource === 'region') {
 					if (operation === 'add') {
 						body.parentId = this.getNodeParameter('parentId', i) as string;
 						body.name = this.getNodeParameter('name', i) as string;
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						Object.assign(body, additionalFields);
 
 						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/region/add', body);
 
-					} else if (operation === 'list') {
-						// todo body
-						// const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-						// Object.assign(body, additionalFields);
+					} else if (operation === 'getAll') {
+						responseData = await yealinkApiRequest.call(this, 'GET', 'api/open/v1/manager/region/getAll');
 
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/region/list', body);
+					}
+				} else if (resource === 'rpsDevice') {
+					if (operation === 'checkDevice') {
+						qs.mac = this.getNodeParameter('mac', i) as string;
+						responseData = await yealinkApiRequest.call(this, 'GET', 'api/open/v1/manager/rpsDevice/checkDevice', undefined, qs);
+
+					} else if (operation === 'checkMac') {
+						qs.mac = this.getNodeParameter('mac', i) as string;
+						responseData = await yealinkApiRequest.call(this, 'GET', 'api/open/v1/manager/rpsDevice/checkMac', undefined, qs);
 
 					}
 				} else if (resource === 'staff') {
 					if (operation === 'addSip') {
-						// todo check body
 						body.sipRegisterName = this.getNodeParameter('sipRegisterName', i) as string;
 						body.username = this.getNodeParameter('username', i) as string;
 						body.password = this.getNodeParameter('password', i) as string;
-						body.sipLabel = this.getNodeParameter('sipLabel', i) as string;
-						body.sipDisplayName = this.getNodeParameter('sipDisplayName', i) as string;
 						body.sipServer1 = this.getNodeParameter('sipServer1', i) as string;
 						body.sipPort1 = this.getNodeParameter('sipPort1', i) as string;
-						body.sipServer2 = this.getNodeParameter('sipServer2', i) as string;
-						body.sipPort2 = this.getNodeParameter('sipPort2', i) as string;
-						body.type = this.getNodeParameter('type', i) as string;
-						// const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-
-						// Object.assign(body, additionalFields);
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						Object.assign(body, additionalFields);
 
 						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/staff/addSip', body);
 
 					} else if (operation === 'findPagedList') {
-						body.searchKey = this.getNodeParameter('searchKey', i) as string;
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						 if(additionalFields.orderbys !== undefined && (additionalFields.orderbys as IDataObject).metadataValues !== undefined) {
+						 	body.orderbys = (additionalFields.orderbys as IDataObject).metadataValues;
+						 	delete additionalFields.orderbys;
+						 }
+						Object.assign(body, additionalFields);
 
 						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/staff/findPagedList', body);
-
-					} else if (operation === 'list') {
-						// todo body
-						// const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-						// Object.assign(body, additionalFields);
-
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/staff/list', body);
 
 					}
 				}
 
 				if (responseData.error !== null && responseData.error !== undefined) {
-					throw new NodeApiError(this.getNode(), {message:responseData.error.msg, description:responseData.error, httpCode:responseData.error.errorCode});
+					throw new NodeApiError(this.getNode(), responseData.error);
 				} else if (simplifyOutput) {
 					responseData = simplify(responseData);
 				}
