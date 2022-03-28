@@ -11,7 +11,7 @@ export class YealinkApi implements ICredentialType {
 			displayName: 'URL',
 			name: 'url',
 			type: 'string',
-			default: 'https://api-dm.yealink.com:8443',
+			default: 'https://api-dm.yealink.com:8445',
 			description: 'The main URL including the port number',
 		},
 		{
