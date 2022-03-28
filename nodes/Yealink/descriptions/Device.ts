@@ -47,7 +47,7 @@ export const deviceFields: INodeProperties[] = [
 		name: 'mac',
 		required: true,
 		type: 'string',
-		// type: 'multiOptions',
+		// type: 'options',
 		// typeOptions: {
 		// 	loadOptionsMethod: 'getDeviceMacs',
 		// },
@@ -78,11 +78,10 @@ export const deviceFields: INodeProperties[] = [
 		displayName: 'Region ID',
 		name: 'regionId',
 		required: true,
-		type: 'string',
-		// type: 'options',
-		// typeOptions: {
-		// 	loadOptionsMethod: 'getRegionIds', // todo
-		// },
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getRegionIds',
+		},
 		displayOptions: {
 			show: {
 				resource: ['device'],
@@ -143,35 +142,40 @@ export const deviceFields: INodeProperties[] = [
 			{
 				displayName: 'Server ID',
 				name: 'serverId',
-				type: 'string',
-				// type: 'options',
-				// typeOptions: {
-				// 	loadOptionsMethod: 'getServerIds', // todo
-				// },
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getServerIds',
+				},
 				default: '',
 				description: 'The server ID',
 			},
+			// {
+			// 	displayName: 'Staff IDs',
+			// 	name: 'staffIds',
+			// 	type: 'multiOptions',
+			// 	typeOptions: {
+			// 		loadOptionsMethod: 'getStaffIds',
+			// 	},
+			// 	default: {},
+			// 	description: 'The list of the account IDs that you cannot specify',
+			// },
 			{
 				displayName: 'Staff IDs',
 				name: 'staffIds',
 				type: 'collection',
 				typeOptions: {
 					multipleValues: true,
-					multipleValueButtonText: 'Add Staff',
 				},
 				placeholder: 'Add Staff ID',
 				default: {},
 				description: 'The list of the account IDs that you cannot specify',
 				options: [
 					{
-						displayName: 'Staff ID',
-						name: 'staffId',
+						displayName: 'ID',
+						name: 'id',
 						type: 'string',
-						// typeOptions: {
-						// 	loadOptionsMethod: 'getServerIds', // todo
-						// },
 						default: '',
-						description: 'The account ID that you cannot specify',
+						description: 'The account ID',
 					},
 				],
 			},
@@ -183,7 +187,7 @@ export const deviceFields: INodeProperties[] = [
 					multipleValues: true,
 				},
 				placeholder: 'Add Staff',
-				default: { metadataValues: [{lineId:'', staffId: ''}] },
+				default: {},
 				description: 'The account information that you can specify',
 				options: [
 					{
@@ -253,13 +257,12 @@ export const deviceFields: INodeProperties[] = [
 			// 	description: 'The list of the device IDs',
 			// },
 			{
-				displayName: 'IDs',
-				name: 'ids',
+				displayName: 'DeviceIds IDs',
+				name: 'deviceIds',
 				required: true,
 				type: 'collection',
 				typeOptions: {
 					multipleValues: true,
-					// multipleValueButtonText: 'Add ID',
 				},
 				placeholder: 'Add ID',
 				default: {},
@@ -281,16 +284,35 @@ export const deviceFields: INodeProperties[] = [
 				default: true,
 				description: 'Whether to synchronize the device to the RPS device. The default value is true.',
 			},
+			// {
+			// 	displayName: 'Macs',
+			// 	name: 'macs',
+			// 	type: 'multiOptions',
+			// 	typeOptions: {
+			// 		loadOptionsMethod: 'getDeviceMacs',
+			// 	},
+			// 	default: {},
+			// 	description: 'The list of the MAC addresses',
+			// },
 			{
 				displayName: 'Macs',
 				name: 'macs',
-				type: 'string',
-				// type: 'multiOptions',
-				// typeOptions: {
-				// 	loadOptionsMethod: 'getDeviceMacs',
-				// },
-				default: '',
+				type: 'collection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				placeholder: 'Add ID',
+				default: {},
 				description: 'The list of the MAC addresses',
+				options: [
+					{
+						displayName: 'Mac',
+						name: 'mac',
+						type: 'string',
+						default: '',
+						description: 'The MAC address',
+					},
+				],
 			},
 			{
 				displayName: 'Delete RPS',
@@ -327,11 +349,10 @@ export const deviceFields: INodeProperties[] = [
 		displayName: 'Region ID',
 		name: 'regionId',
 		required: true,
-		type: 'string',
-		// type: 'options',
-		// typeOptions: {
-		// 	loadOptionsMethod: 'getRegionIds', // todo
-		// },
+		type: 'options',
+		typeOptions: {
+			loadOptionsMethod: 'getRegionIds',
+		},
 		displayOptions: {
 			show: {
 				resource: ['device'],
@@ -392,35 +413,40 @@ export const deviceFields: INodeProperties[] = [
 			{
 				displayName: 'Server ID',
 				name: 'serverId',
-				type: 'string',
-				// type: 'options',
-				// typeOptions: {
-				// 	loadOptionsMethod: 'getServerIds', // todo
-				// },
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getServerIds',
+				},
 				default: '',
 				description: 'The server ID',
 			},
+			// {
+			// 	displayName: 'Staff IDs',
+			// 	name: 'staffIds',
+			// 	type: 'multiOptions',
+			// 	typeOptions: {
+			// 		loadOptionsMethod: 'getStaffIds',
+			// 	},
+			// 	default: {},
+			// 	description: 'The list of the account IDs that you cannot specify',
+			// },
 			{
 				displayName: 'Staff IDs',
 				name: 'staffIds',
 				type: 'collection',
 				typeOptions: {
 					multipleValues: true,
-					multipleValueButtonText: 'Add Staff',
 				},
 				placeholder: 'Add Staff ID',
 				default: {},
 				description: 'The list of the account IDs that you cannot specify',
 				options: [
 					{
-						displayName: 'Staff ID',
-						name: 'staffId',
+						displayName: 'ID',
+						name: 'id',
 						type: 'string',
-						// typeOptions: {
-						// 	loadOptionsMethod: 'getServerIds', // todo
-						// },
 						default: '',
-						description: 'The account ID that you cannot specify',
+						description: 'The account ID',
 					},
 				],
 			},
@@ -432,7 +458,7 @@ export const deviceFields: INodeProperties[] = [
 					multipleValues: true,
 				},
 				placeholder: 'Add Staff',
-				default: { metadataValues: [{lineId:'', staffId: ''}] },
+				default: {},
 				description: 'The account information that you can specify',
 				options: [
 					{
@@ -484,7 +510,7 @@ export const deviceFields: INodeProperties[] = [
 		type: 'string',
 		// type: 'options',
 		// typeOptions: {
-		// 	loadOptionsMethod: 'getDeviceMacs', // todo
+		// 	loadOptionsMethod: 'getDeviceMacs',
 		// },
 		displayOptions: {
 			show: {
@@ -509,32 +535,13 @@ export const deviceFields: INodeProperties[] = [
 		default: '',
 		description: 'The account information',
 	},
-	// {
-	// 	displayName: 'Region IDs',
-	// 	name: 'regionIds',
-	// 	required: true,
-	// 	type: 'multiOptions',
-	// 	typeOptions: {
-	// 		loadOptionsMethod: 'getRegionIds', // todo
-	// 	},
-	// 	displayOptions: {
-	// 		show: {
-	// 			resource: ['device'],
-	// 			operation: ['getSearchList'],
-	// 		},
-	// 	},
-	// 	default: {},
-	// 	description: 'The list of the site IDs',
-	// },
 	{
 		displayName: 'Region IDs',
 		name: 'regionIds',
 		required: true,
-		type: 'collection',
-		placeholder: 'Add Region ID',
+		type: 'multiOptions',
 		typeOptions: {
-			multipleValues: true,
-			multipleValueButtonText: 'Add Region ID',
+			loadOptionsMethod: 'getRegionIds',
 		},
 		displayOptions: {
 			show: {
@@ -544,15 +551,6 @@ export const deviceFields: INodeProperties[] = [
 		},
 		default: {},
 		description: 'The list of the site IDs',
-		options: [
-			{
-				displayName: 'Region ID',
-				name: 'regionId',
-				type: 'string',
-				default: '',
-				description: 'The site ID',
-			},
-		],
 	},
 	{
 		displayName: 'Additional Fields',
@@ -589,7 +587,7 @@ export const deviceFields: INodeProperties[] = [
 					multipleValues: true,
 				},
 				placeholder: 'Add Staff',
-				default: { metadataValues: [{field:'', order: ''}] },
+				default: {},
 				description: '',
 				options: [
 					{

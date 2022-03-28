@@ -18,7 +18,6 @@ import {
 import * as crypto from 'crypto';
 
 import { v4 as uuidv4 } from 'uuid';
-import CryptoJS = require('crypto-js');
 
 export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions | IExecuteSingleFunctions | ILoadOptionsFunctions,
 	method: string, endpoint: string, body: IDataObject = {}, qs: IDataObject = {}, uri?: string): Promise<any> { // tslint:disable-line:no-any
@@ -43,14 +42,16 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 		uri = uri || `${credentials.url}/${endpoint}`;
 
 		// Generate UUID
-		const guid = uuidv4();
+		const guid = uuidv4()
+			.replace(/-/g,''); // remove "-"
 
 		// Get unix timestamp in ms
 		const timestamp = Date.now();
 
 		let options: OptionsWithUri;
 		// When the Body is null (the content-Length is 0), the Content-MD5 is not required in the header
-		if (Object.keys(body).length === 0) {
+		if (method === 'GET') {
+		// if (Object.keys(body).length === 0) {
 
 			// Generate string for signing
 			let sigString = method + '\n' +
@@ -65,7 +66,7 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 				for (const [key, value] of Object.entries(qs)) {
 					formattedQFStr += `${key}=${value}&`;
 				}
-				 formattedQFStr = formattedQFStr.substring(0, formattedQFStr.lastIndexOf('&')); // remove last "&"
+				formattedQFStr = formattedQFStr.substring(0, formattedQFStr.lastIndexOf('&')); // remove last "&"
 
 				sigString += '\n' + formattedQFStr;
 			}
@@ -73,7 +74,7 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 			// Create the signature
 			const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
 
-			options= {
+			options = {
 				method,
 				headers: {
 					'X-Ca-Key': key,
@@ -93,25 +94,12 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 			}
 
 		} else {
-			// todo fix md5
 			// Generate Content MD5
-			// const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body)).digest('base64');
-			const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body), 'binary').digest('base64');
-			// const contentMd5 = crypto.createHash('md5').update(Buffer.from(JSON.stringify(body), 'utf8')).digest('base64');
-			// const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body, null, 'strToRm').replace(/strToRm/g, '').replace(/ /g, '')).digest('base64');
-
-			//console.log(
-			//     JSON.stringify(
-			//         {mac: "001565f460d4",  machineId: "8148017051507356",  modelId: "740b5620916a4d0a9a45171630076528",  phone: "YealinkDevice",  regionId: "e10d632b8c6d4624b92cd7af6eadbca9"},
-			//         null,
-			//         'strToRm')
-			//     .replace(/strToRm/g, '')
-			//     .replace(/ /g, '')
-			// )
+			const contentMd5 = crypto.createHash('md5').update(JSON.stringify(body)).digest('base64');
 
 			// Generate string for signing
-			const sigString =  method + '\n' +
-				'Content-MD5' + contentMd5 + '\n' +
+			const sigString = method + '\n' +
+				'Content-MD5:' + contentMd5 + '\n' +
 				'X-Ca-Key:' + key + '\n' +
 				'X-Ca-Nonce:' + guid + '\n' +
 				'X-Ca-Timestamp:' + timestamp + '\n' +
@@ -120,7 +108,7 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 			// Create the signature
 			const sign = crypto.createHmac('sha256', secret).update(sigString).digest('base64');
 
-			options= {
+			options = {
 				method,
 				headers: {
 					'Content-MD5': contentMd5,
@@ -136,11 +124,31 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
 				json: true,
 			};
 		}
-
 		return this.helpers.request!(options);
 	} catch (error) {
 		throw new NodeApiError(this.getNode(), error);
 	}
+}
+
+export async function yealinkApiRequestAllItems(this: IExecuteFunctions | ILoadOptionsFunctions, method: string, endpoint: string, body: IDataObject = {}, qs: IDataObject = {}): Promise<any> { // tslint:disable-line:no-any
+
+	const returnData: IDataObject[] = [];
+	let responseData;
+	body.limit = 1000;
+	body.skip = 0;
+
+	do {
+		responseData = await yealinkApiRequest.call(this, method, endpoint, body);
+		returnData.push.apply(returnData, simplify(responseData) as IDataObject[]);
+		body.skip += body.limit;
+	} while (
+		// until the retrieved records are 0
+		responseData['ret'] !== 0 ||
+		responseData['total'] !== 0
+		// responseData['data']['total'] !== 0
+		);
+
+	return returnData;
 }
 
 /**
@@ -148,17 +156,21 @@ export async function yealinkApiRequest(this: IHookFunctions | IExecuteFunctions
  *
  * @export
  * @param IDataObject responseData
- * @returns IDataObject
+ * @returns string|IDataObject|IDataObject[]
  */
-export function simplify(responseData: IDataObject, property = 'data'): IDataObject {
+export function simplify(responseData: IDataObject): string|IDataObject|IDataObject[] {
+	const property = 'data';
+
 	if (typeof responseData[property] === 'string') {
-		// if the property is string return just it and skip other properties
-		return {[property]: responseData[property]};
-	} else if (Object.keys(responseData[property] as IDataObject).length !== 0) {
-		// if the property is not empty return the object inside it
-		return responseData[property] as IDataObject;
-	} else {
-		// otherwise return the same data
-		return responseData;
+		// if the 'data' property is string return just it and skip other properties
+		return {[property]: responseData[property] as string};
 	}
+
+	while (responseData[property] !== undefined ) { //&& Object.keys(responseData[property] as IDataObject).length !== 0
+		// if the 'data' property is not empty and it consists other 'data properties', get the innermost 'data'
+		responseData = responseData[property] as IDataObject;
+	}
+
+	// return the data
+	return responseData as IDataObject;
 }
