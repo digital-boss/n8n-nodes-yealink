@@ -29,12 +29,17 @@ export const deviceOperations: INodeProperties[] = [
 				description: 'Editing the device',
 			},
 			{
+				name: 'Get Complex List',
+				value: 'getComplexList',
+				description: 'Viewing devices by paging',
+			},
+			{
 				name: 'Get Search List',
 				value: 'getSearchList',
 				description: 'Searching for Devices by Paging according to the MAC/Extension/Site',
 			},
 		],
-		default: 'getSearchList',
+		default: 'getComplexList',
 	},
 ];
 
@@ -501,6 +506,102 @@ export const deviceFields: INodeProperties[] = [
 	},
 
 	/*-------------------------------------------------------------------------- */
+	/*                           device:getComplexList                        	 */
+	/* ------------------------------------------------------------------------- */
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getComplexList'],
+			},
+		},
+		options: [
+			{
+				displayName: 'Auto Count',
+				name: 'autoCount',
+				type: 'boolean',
+				default: false,
+				description: 'Whether the total number is accounted automatically. It defaults to false.',
+			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				default: 0,
+				description: 'The maximum number of the obtained records per paging. When you use regionIds to search for devices, this parameter(limit) is required to ensure the interface performance.',
+			},
+			{
+				displayName: 'Search Key',
+				name: 'searchKey',
+				type: 'string',
+				default: '',
+				description: 'The keywords used for searching for MAC, IP, the device name, or the account information',
+			},
+			{
+				displayName: 'Model IDs',
+				name: 'modelIds',
+				type: 'string',
+				default: '',
+				description: 'The model ID used for confining the model',
+			},
+			{
+				displayName: 'Orderbys',
+				name: 'orderbys',
+				type: 'fixedCollection',
+				typeOptions: {
+					multipleValues: true,
+				},
+				placeholder: 'Add Staff',
+				default: {},
+				description: '',
+				options: [
+					{
+						name: 'metadataValues',
+						displayName: 'Metadata',
+						values: [
+							{
+								displayName: 'Field',
+								name: 'field',
+								type: 'string',
+								default: '',
+							},
+							{
+								displayName: 'Order',
+								name: 'order',
+								type: 'number',
+								default: '',
+								description: '',
+							},
+						],
+					},
+				],
+			},
+			{
+				displayName: 'Region IDs',
+				name: 'regionIds',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'getRegionIds',
+				},
+				default: [],
+				description: 'The list of the site IDs (confining the searching scope)',
+			},
+			{
+				displayName: 'Skip',
+				name: 'skip',
+				type: 'number',
+				default: '',
+				description: 'The number of skipped search results. This allows you to directly view the desired item by skipping some items. When you use regionIds to search for devices, this parameter(skip) is required to ensure the interface performance.',
+			},
+		],
+	},
+
+	/*-------------------------------------------------------------------------- */
 	/*                           device:getSearchList                        	 */
 	/* ------------------------------------------------------------------------- */
 	{
@@ -549,7 +650,7 @@ export const deviceFields: INodeProperties[] = [
 				operation: ['getSearchList'],
 			},
 		},
-		default: {},
+		default: [],
 		description: 'The list of the site IDs',
 	},
 	{
@@ -620,4 +721,5 @@ export const deviceFields: INodeProperties[] = [
 			},
 		],
 	},
+
 ];
