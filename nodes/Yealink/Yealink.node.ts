@@ -46,7 +46,7 @@ export class Yealink implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Consume Yealink API (v.0.1.3)', // TODO: increase package version automatically
+		description: 'Consume Yealink API (v.0.1.4)', // TODO: increase package version automatically
 		defaults: {
 				name: 'Yealink',
 				color: '#4C6363',
