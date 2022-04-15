@@ -46,7 +46,7 @@ export class Yealink implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Consume Yealink API',
+		description: 'Consume Yealink API (v.0.1.3)', // TODO: increase package version automatically
 		defaults: {
 				name: 'Yealink',
 				color: '#4C6363',
@@ -106,51 +106,51 @@ export class Yealink implements INodeType {
 
 	methods = {
 		loadOptions: {
-			// // Get all the Device IDs to display them to user so that he can
-			// // select them easily
-			// async getDeviceIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-			// 	const returnData: INodePropertyOptions[] = [];
-			//
-			// 	const responseData = await yealinkApiRequestAllItems.call(this, 'POST', 'api/open/v1/manager/device/getSearchList');
-			//
-			// 	for (const data of responseData) {
-			// 		returnData.push({
-			// 			name: data.id,
-			// 			value: data.id,
-			// 		});
-			// 	}
-			//
-			// 	// returnData.sort((a, b) => {
-			// 	// 	if (a.name < b.name) { return -1; }
-			// 	// 	if (a.name > b.name) { return 1; }
-			// 	// 	return 0;
-			// 	// });
-			//
-			// 	return returnData;
-			// },
-			//
-			// // Get all the Device MACs to display them to user so that he can
-			// // select them easily
-			// async getDeviceMacs(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-			// 	const returnData: INodePropertyOptions[] = [];
-			//
-			// 	const responseData = await yealinkApiRequestAllItems.call(this, 'POST', 'api/open/v1/manager/device/getSearchList');
-			//
-			// 	for (const data of responseData) {
-			// 		returnData.push({
-			// 			name: data.mac,
-			// 			value: data.mac,
-			// 		});
-			// 	}
-			//
-			// 	// returnData.sort((a, b) => {
-			// 	// 	if (a.name < b.name) { return -1; }
-			// 	// 	if (a.name > b.name) { return 1; }
-			// 	// 	return 0;
-			// 	// });
-			//
-			// 	return returnData;
-			// },
+			// Get all the Device IDs to display them to user so that he can
+			// select them easily
+			async getDeviceIds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const returnData: INodePropertyOptions[] = [];
+
+				const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/getSearchList');
+
+				for (const data of responseData) {
+					returnData.push({
+						name: data.id,
+						value: data.id,
+					});
+				}
+
+				// returnData.sort((a, b) => {
+				// 	if (a.name < b.name) { return -1; }
+				// 	if (a.name > b.name) { return 1; }
+				// 	return 0;
+				// });
+
+				return returnData;
+			},
+
+			// Get all the Device MACs to display them to user so that he can
+			// select them easily
+			async getDeviceMacs(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const returnData: INodePropertyOptions[] = [];
+
+				const responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/getSearchList');
+
+				for (const data of responseData) {
+					returnData.push({
+						name: data.mac,
+						value: data.mac,
+					});
+				}
+
+				// returnData.sort((a, b) => {
+				// 	if (a.name < b.name) { return -1; }
+				// 	if (a.name > b.name) { return 1; }
+				// 	return 0;
+				// });
+
+				return returnData;
+			},
 
 			// Get all the Server IDs to display them to user so that he can
 			// select them easily
