@@ -367,7 +367,7 @@ export class Yealink implements INodeType {
 						 }
 						Object.assign(body, additionalFields);
 
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/getSearchList', body);
+						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/getComplexList', body);
 
 					} else if (operation === 'getSearchList') {
 						body.mac = this.getNodeParameter('mac', i) as string;
