@@ -37,6 +37,7 @@ import { OptionsWithUri } from 'request';
 import { v4 as uuidv4 } from 'uuid';
 
 import * as crypto from 'crypto';
+import { version } from '../version';
 
 export class Yealink implements INodeType {
 	description: INodeTypeDescription = {
@@ -46,7 +47,7 @@ export class Yealink implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Consume Yealink API (v.0.1.4)', // TODO: increase package version automatically
+		description: `Consume Yealink API (v.${version})`,
 		defaults: {
 				name: 'Yealink',
 				color: '#4C6363',
