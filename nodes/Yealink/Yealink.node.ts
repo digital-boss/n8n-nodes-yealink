@@ -360,6 +360,7 @@ export class Yealink implements INodeType {
 						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/edit', body);
 
 					} else if (operation === 'getComplexList') {
+						const endpoint = 'api/open/v1/manager/device/getComplexList';
 						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
 						if(additionalFields.orderbys !== undefined && (additionalFields.orderbys as IDataObject).metadataValues !== undefined) {
 						 	body.orderbys = (additionalFields.orderbys as IDataObject).metadataValues;
@@ -367,8 +368,12 @@ export class Yealink implements INodeType {
 						 }
 						Object.assign(body, additionalFields);
 
-						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/device/getComplexList', body);
-
+						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+						if(returnAll) {
+							responseData = await yealinkApiRequestAllItems.call(this, 'POST', endpoint, body);
+						} else {
+							responseData = await yealinkApiRequest.call(this, 'POST', endpoint, body);
+						}
 					} else if (operation === 'getSearchList') {
 						body.mac = this.getNodeParameter('mac', i) as string;
 						body.username = this.getNodeParameter('username', i) as string;

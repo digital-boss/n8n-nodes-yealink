@@ -134,12 +134,17 @@ export async function yealinkApiRequestAllItems(this: IExecuteFunctions | ILoadO
 
 	const returnData: IDataObject[] = [];
 	let responseData;
-	body.limit = 1000;
-	body.skip = 0;
+	if (!body.limit) {
+		body.limit = 100;
+	}
+	if (!body.skip) {
+		body.skip = 0;
+	}
 
 	do {
 		responseData = await yealinkApiRequest.call(this, method, endpoint, body);
 		returnData.push.apply(returnData, simplify(responseData) as IDataObject[]);
+		// @ts-ignore
 		body.skip += body.limit;
 	} while (
 		// until the retrieved records are 0

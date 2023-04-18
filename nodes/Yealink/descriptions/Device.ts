@@ -600,6 +600,19 @@ export const deviceFields: INodeProperties[] = [
 			},
 		],
 	},
+	{
+		displayName: 'Return All',
+		name: 'returnAll',
+		type: 'boolean',
+		displayOptions: {
+			show: {
+				resource: ['device'],
+				operation: ['getComplexList'],
+			},
+		},
+		default: false,
+		description: 'Return all items',
+	},
 
 	/*-------------------------------------------------------------------------- */
 	/*                           device:getSearchList                        	 */
