@@ -203,7 +203,6 @@ export const staffFields: INodeProperties[] = [
 				typeOptions: {
 					multipleValues: true,
 				},
-				placeholder: 'Add Staff',
 				default: { metadataValues: [{field:'', order: ''}] },
 				description: '',
 				options: [

@@ -15,16 +15,7 @@ import {
 	NodeApiError,
 } from 'n8n-workflow';
 
-import {
-	deviceFields,
-	deviceOperations,
-	regionFields,
-	regionOperations,
-	rpsDeviceFields,
-	rpsDeviceOperations,
-	staffFields,
-	staffOperations
-} from './descriptions';
+import * as descriptions from './descriptions';
 
 import {
 	simplify,
@@ -32,11 +23,6 @@ import {
 	yealinkApiRequestAllItems,
 } from './GenericFunctions';
 
-import { OptionsWithUri } from 'request';
-
-import { v4 as uuidv4 } from 'uuid';
-
-import * as crypto from 'crypto';
 import { version } from '../version';
 
 export class Yealink implements INodeType {
@@ -69,6 +55,10 @@ export class Yealink implements INodeType {
 				type: 'options',
 				options: [
 					{
+						name: 'Alarm',
+						value: 'alarm',
+					},
+					{
 						name: 'Device',
 						value: 'device',
 					},
@@ -87,14 +77,16 @@ export class Yealink implements INodeType {
 				],
 				default: 'device',
 			},
-			...deviceOperations,
-			...deviceFields,
-			...regionOperations,
-			...regionFields,
-			...rpsDeviceOperations,
-			...rpsDeviceFields,
-			...staffOperations,
-			...staffFields,
+			...descriptions.alarmOperations,
+			...descriptions.alarmFields,
+			...descriptions.deviceOperations,
+			...descriptions.deviceFields,
+			...descriptions.regionOperations,
+			...descriptions.regionFields,
+			...descriptions.rpsDeviceOperations,
+			...descriptions.rpsDeviceFields,
+			...descriptions.staffOperations,
+			...descriptions.staffFields,
 			{
 				displayName: 'Simplify Output',
 				name: 'simplifyOutput',
@@ -312,7 +304,54 @@ export class Yealink implements INodeType {
 
 		for (let i = 0; i < items.length; i++) {
 			try {
-				if (resource === 'device') {
+				if (resource === 'alarm') {
+					if (operation === 'getAlarms') {
+						
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+						if (additionalFields.alarmIds !== undefined) {
+							body.alarmIds = (additionalFields.alarmIds as IDataObject[]).map(a => a.id);
+							delete additionalFields.alarmIds;
+					   }
+						if (additionalFields.orderbys !== undefined && (additionalFields.orderbys as IDataObject).metadataValues !== undefined) {
+							body.orderbys = (additionalFields.orderbys as IDataObject).metadataValues;
+							delete additionalFields.orderbys;
+						}
+						if (additionalFields.regionIds !== undefined) {
+							body.regionIds = (additionalFields.regionIds as IDataObject[]).map(a => a.id);
+							delete additionalFields.regionIds;
+						}
+						if (additionalFields.severities !== undefined) {
+							body.severities = (additionalFields.severities as IDataObject[]).map(a => a.level);
+							delete additionalFields.severities;
+						}
+						Object.assign(body, additionalFields);
+
+						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/alarm/getAlarms', body);
+
+					} else if (operation === 'getList') {
+						
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+
+						if (additionalFields.orderbys !== undefined && (additionalFields.orderbys as IDataObject).metadataValues !== undefined) {
+							body.orderbys = (additionalFields.orderbys as IDataObject).metadataValues;
+							delete additionalFields.orderbys;
+						}
+						if (additionalFields.regionIds !== undefined) {
+							body.regionIds = (additionalFields.regionIds as IDataObject[]).map(a => a.id);
+							delete additionalFields.regionIds;
+						}
+						if (additionalFields.severities !== undefined) {
+							body.severities = (additionalFields.severities as IDataObject[]).map(a => a.level);
+							delete additionalFields.severities;
+						}
+						Object.assign(body, additionalFields);
+						
+						responseData = await yealinkApiRequest.call(this, 'POST', 'api/open/v1/manager/alarm/getList', body);
+
+					}
+
+				} else if (resource === 'device') {
 					if (operation === 'add') {
 						body.mac = this.getNodeParameter('mac', i) as string;
 						body.modelId = this.getNodeParameter('modelId', i) as string;

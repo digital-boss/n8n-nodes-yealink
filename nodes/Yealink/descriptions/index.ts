@@ -1,3 +1,4 @@
+export * from './Alarm';
 export * from './Device';
 export * from './RpsDevice';
 export * from './Region';

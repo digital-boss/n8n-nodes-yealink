@@ -556,7 +556,6 @@ export const deviceFields: INodeProperties[] = [
 				typeOptions: {
 					multipleValues: true,
 				},
-				placeholder: 'Add Staff',
 				default: {},
 				description: '',
 				options: [
@@ -700,7 +699,6 @@ export const deviceFields: INodeProperties[] = [
 				typeOptions: {
 					multipleValues: true,
 				},
-				placeholder: 'Add Staff',
 				default: {},
 				description: '',
 				options: [
